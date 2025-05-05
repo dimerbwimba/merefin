@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   // "CLIENT", "SUPERVISEUR", "ADMINISTRATEUR"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  credits   Credit[]
+}
+
+model Credit {
+  id             String   @id @default(cuid())
+  amount         Float
+  status         String   // "EN_ATTENTE", "APPROUVE", "REJETE", "REMBOURSE"
+  requestDate    DateTime @default(now())
+  approvalDate   DateTime?
+  dueDate        DateTime?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  supervisorId   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  payments       Payment[]
+  metadata       Json?    // Pour stocker des informations supplémentaires comme la raison du rejet, l'objet du crédit, etc.
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  date      DateTime @default(now())
+  creditId  String
+  credit    Credit   @relation(fields: [creditId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  metadata  Json?    // Pour stocker des informations supplémentaires comme la méthode de paiement, les notes, etc.
+}
