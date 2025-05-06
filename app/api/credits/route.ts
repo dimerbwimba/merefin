@@ -9,8 +9,39 @@ const creditSchema = z.object({
   amount: z.number().positive(),
   purpose: z.string().min(10),
   duration: z.number().int().positive().max(36),
-  // Modifier cette ligne pour accepter une chaîne et la convertir en Date
   expectedRepaymentDate: z.string().transform((str) => new Date(str)),
+  metadata: z
+    .object({
+      // Informations personnelles
+      dateOfBirth: z.string().transform((str) => new Date(str)),
+      idType: z.string(),
+      idNumber: z.string(),
+
+      // Justificatif de domicile
+      addressProofType: z.string(),
+      address: z.string(),
+
+      // Activité génératrice de revenus
+      activityType: z.string(),
+      activityDuration: z.string(),
+      monthlyIncome: z.number().positive(),
+
+      // Capacité de remboursement
+      monthlyExpenses: z.number().positive(),
+
+      // Garantie
+      guaranteeType: z.string(),
+      guaranteeDescription: z.string(),
+
+      // Déclarations
+      noDebt: z.boolean(),
+      acceptFees: z.boolean(),
+
+      // Champs optionnels
+      purpose: z.string().optional(),
+      duration: z.number().optional(),
+    })
+    .optional(),
 })
 
 export async function POST(req: Request) {
@@ -22,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { userId, amount, purpose, duration, expectedRepaymentDate } = creditSchema.parse(body)
+    const { userId, amount, purpose, duration, expectedRepaymentDate, metadata } = creditSchema.parse(body)
 
     // Vérifier que l'utilisateur ne demande pas un crédit pour quelqu'un d'autre
     if (session.user.id !== userId && session.user.role !== "ADMINISTRATEUR") {
@@ -37,10 +68,11 @@ export async function POST(req: Request) {
         requestDate: new Date(),
         dueDate: expectedRepaymentDate,
         userId,
-        // Stocker les métadonnées supplémentaires
+        // Stocker les métadonnées complètes
         metadata: {
           purpose,
           duration,
+          ...metadata,
         },
       },
     })

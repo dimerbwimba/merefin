@@ -7,7 +7,7 @@ import { CreditsList } from "@/components/supervisor/credits-list"
 export default async function SupervisorCreditsPage({
   searchParams,
 }: {
-  searchParams: { status?: string; userId?: string }
+  searchParams: Promise<{ status?: string; userId?: string }>
 }) {
   const session = await getServerSession(authOptions)
 
@@ -22,12 +22,13 @@ export default async function SupervisorCreditsPage({
   // Construire les filtres en fonction des paramètres de recherche
   const filters: any = {}
 
-  if (searchParams.status) {
-    filters.status = searchParams.status
+  const {status, userId} = await searchParams
+  if (status) {
+    filters.status = status
   }
 
-  if (searchParams.userId) {
-    filters.userId = searchParams.userId
+  if (userId) {
+    filters.userId = userId
   }
 
   // Récupérer les crédits avec les filtres
@@ -66,7 +67,7 @@ export default async function SupervisorCreditsPage({
   return (
     <div className="container mx-auto py-8 px-20">
       <h1 className="text-2xl font-bold mb-6">Gestion des Crédits</h1>
-      <CreditsList credits={credits} clients={clients} currentFilters={searchParams} />
+      <CreditsList credits={credits} clients={clients} currentFilters={await searchParams} />
     </div>
   )
 }
