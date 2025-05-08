@@ -1,35 +1,40 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { signOut, useSession } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { LogOut, User } from "lucide-react"
 
 export function Navbar() {
-  const { data: session } = useSession();
-  const pathname = usePathname();
+  const { data: session } = useSession()
+  const pathname = usePathname()
 
   // Ne pas afficher la barre de navigation sur les pages d'authentification
   if (pathname.startsWith("/auth/")) {
-    return null;
+    return null
   }
 
   return (
-    <header className="border-b px-20 sticky top-0 z-50 bg-background shadow-sm">
+    <header className="border-b md:px-20 px-4">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-bold text-xl">
-            MEREFIN
+            MicroFinance
           </Link>
           {session && (
             <nav className="hidden md:flex gap-6">
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
+              <Link href="/dashboard" className="text-sm font-medium transition-colors hover:text-primary">
                 Tableau de bord
               </Link>
+              {session.user?.role === "ADMINISTRATEUR" && (
+                <Link
+                  href="/dashboard/admin/fund-pool"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Fund Pool
+                </Link>
+              )}
               {/* Ajouter d'autres liens de navigation ici */}
             </nav>
           )}
@@ -39,9 +44,7 @@ export function Navbar() {
           {session ? (
             <div className="flex items-center gap-4">
               <div className="hidden md:block text-sm">
-                <span className="text-muted-foreground mr-1">
-                  Connecté en tant que:
-                </span>
+                <span className="text-muted-foreground mr-1">Connecté en tant que:</span>
                 <span className="font-medium">{session.user.name}</span>
               </div>
               <Button
@@ -65,5 +68,5 @@ export function Navbar() {
         </div>
       </div>
     </header>
-  );
+  )
 }

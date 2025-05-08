@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // datasource db {
@@ -13,30 +13,32 @@ datasource db {
 // }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   // "CLIENT", "SUPERVISEUR", "ADMINISTRATEUR"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  credits   Credit[]
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         String // "CLIENT", "SUPERVISEUR", "ADMINISTRATEUR"
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  credits      Credit[]
+  transactions Transaction[] @relation("UserTransactions")
 }
 
 model Credit {
-  id             String   @id @default(cuid())
-  amount         Float
-  status         String   // "EN_ATTENTE", "APPROUVE", "REJETE", "REMBOURSE"
-  requestDate    DateTime @default(now())
-  approvalDate   DateTime?
-  dueDate        DateTime?
-  userId         String
-  user           User     @relation(fields: [userId], references: [id])
-  supervisorId   String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  payments       Payment[]
-  metadata       Json?    // Pour stocker des informations supplémentaires comme la raison du rejet, l'objet du crédit, etc.
+  id           String    @id @default(cuid())
+  amount       Float
+  status       String // "EN_ATTENTE", "APPROUVE", "REJETE", "REMBOURSE"
+  requestDate  DateTime  @default(now())
+  approvalDate DateTime?
+  dueDate      DateTime?
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  supervisorId String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  payments     Payment[]
+  metadata     Json? // Pour stocker des informations supplémentaires comme la raison du rejet, l'objet du crédit, etc.
+  transaction    Transaction? @relation("CreditTransaction")
 }
 
 model Payment {
@@ -47,5 +49,34 @@ model Payment {
   credit    Credit   @relation(fields: [creditId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  metadata  Json?    // Pour stocker des informations supplémentaires comme la méthode de paiement, les notes, etc.
+  metadata  Json? // Pour stocker des informations supplémentaires comme la méthode de paiement, les notes, etc.
+transaction Transaction? @relation("PaymentTransaction")
+}
+
+model FundPool {
+  id            String   @id @default(cuid())
+  balance       Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  transactions  Transaction[]
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  type          String   // "DEPOSIT", "WITHDRAWAL", "CREDIT_APPROVAL", "PAYMENT"
+  amount        Float
+  date          DateTime @default(now())
+  description   String?
+  status        String   // "COMPLETED", "PENDING", "FAILED"
+  fundPoolId    String
+  fundPool      FundPool @relation(fields: [fundPoolId], references: [id])
+  userId        String?
+  user          User?    @relation("UserTransactions", fields: [userId], references: [id])
+  creditId      String?  @unique
+  credit        Credit?  @relation("CreditTransaction", fields: [creditId], references: [id])
+  paymentId     String?  @unique
+  payment       Payment? @relation("PaymentTransaction", fields: [paymentId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  metadata      Json?
 }
